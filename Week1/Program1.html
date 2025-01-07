@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JavaScript Variables Demo</title>
+</head>
+<body>
+  <h1>assigns different types of data to variables</h1>
+  <script>
+    
+    //Hoisting
+    console.log("Hoisting");
+    var varVar = "var variable";
+    let letVar = 10;
+    const constVar = "const variable";
+    console.log("varVariable:", varVar);
+    console.log("let:", letVar);
+    console.log("constVariable:", constVar);
+
+    // Reassignment
+    console.log("Reassignment demo:");
+    varVar = "I can be reassigned (var)";
+    console.log("Reassigned varVariable:", varVar);
+    letVar = "reassigned";
+    console.log("Reassigned letVariable:", letVar);
+    console.log("constVar:", constVar);
+
+    // Scope
+    function scopeDemo() {
+      if (true) {
+        var scopedVar = "variable in a block(var)";
+        let scopedLet = "variable in a block(let)";
+        const scopedConst = "const variable in a block";
+        console.log("Inside block:");
+        console.log("scopedVariable:", scopedVar);
+        console.log("scopedLet:", scopedLet);
+        console.log("scopedConstant:", scopedConst);
+      }
+      console.log("Outside block:");
+      console.log("scopedVar:", scopedVar);
+    }
+
+    scopeDemo();
+  </script>
+</body>
+</html>
