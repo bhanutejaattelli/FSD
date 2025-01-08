@@ -1,7 +1,8 @@
-function updateEmployeeDetails(newRole, ...employee) {
+function updateEmployeeDetails(newRole, employee) {
     return {      
-      role: newRole,
-      ...employee    
+      ...employee,
+      role: newRole
+          
     };
 }
 const employee = { name: 'Bhanu Teja', role: 'Student', age: 20, location: 'IND' };
