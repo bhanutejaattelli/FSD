@@ -1,13 +1,10 @@
 function greet(name,callback){
-    setTimeout(function(){
-        console.log('Hello'+ name);
-        callback();
-    }, 2000);
-    return callback();
+    console.log('Hello '+ name);
+return callback();
 }
 
 function Printmsg(msg){
-    return msg;
+return msg;
 }
 
 const result=greet('Bhanu', Printmsg);
