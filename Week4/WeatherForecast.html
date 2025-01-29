@@ -14,26 +14,30 @@
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
-                    //console.log(data); 
+                    console.log(data); 
                     const forecastTableBody = document.querySelector("#forecast-table tbody");
                     forecastTableBody.innerHTML = "";
 
-                    // for (let i = 0; i < data.length; i++) {
-                    //     //const date=data[i].dt;
-                    //     const date = new Date(data[i].dt * 1000).toLocaleDateString();
-                    //     const temperature = data[i].main.temp;
+                    // data.list.forEach(item => {
+                    //     // item=item+4;
+                    //     const date = new Date(item.dt * 1000).toLocaleDateString();
+                    //     const temperature = item.main.temp;
                     //     const row = document.createElement("tr");
                     //     row.innerHTML = `<td>${date}</td><td>${temperature}°C</td>`;
                     //     forecastTableBody.appendChild(row);
-                    // }
+                    // });
 
-                    data.list.forEach(item => {
+                    //console.log(data.list.length)
+                    for (let i = 0; i < data.list.length; i++) {
+                        const item = data.list[i*5];
+                        // item=item+4;
                         const date = new Date(item.dt * 1000).toLocaleDateString();
                         const temperature = item.main.temp;
                         const row = document.createElement("tr");
                         row.innerHTML = `<td>${date}</td><td>${temperature}°C</td>`;
                         forecastTableBody.appendChild(row);
-                    });
+                    }
+
                 })
                 .catch(error => console.error('Error fetching weather data:', error));
         }
