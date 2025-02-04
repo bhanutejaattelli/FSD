@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Management</title>
+</head>
+<body>
+
+    <h1>Event Management System</h1>
+    
+    <div>
+        <!-- <h2 id="eventName">Conference</h2>
+        <p><strong>Start Time:</strong> <span id="startTime">10:00 AM</span></p>
+        <p><strong>End Time:</strong> <span id="endTime">03:00 PM</span></p> -->
+        <p><strong>Status:</strong> <span id="eventStatus">Not Started</span></p>
+        <p><strong>Started At:</strong> <span id="startedAt">-</span></p>
+        <p><strong>Finished At:</strong> <span id="finishedAt">-</span></p>
+        
+        <button onclick="startEvent.trigger()">Start Event</button>
+        <button onclick="finishEvent.trigger()">Finish Event</button>
+        <button onclick="statusEvent.trigger()">Check Status</button>
+    </div>' '
+
+    <script>
+        class EventManager {
+            constructor(name, startTime, endTime) {
+                this.name = name;
+                this.startTime = new Date(startTime);
+                this.endTime = new Date(endTime);
+                this.status = "Not Started";
+                this.startedAt = null;
+                this.finishedAt = null;
+                this.inProgressDuration = null;
+                this.interval = null;
+                this.listeners = [];
+            }
+
+            addListener(callback) {
+                this.listeners.push(callback);
+            }
+
+            notifyListeners() {
+                this.listeners.forEach(callback => callback(this));
+            }
+        }
+
+        class StartEvent {
+            constructor(eventManager) {
+                this.eventManager = eventManager;
+            }
+
+            trigger() {
+                if (new Date() >= this.eventManager.startTime) {
+                    this.eventManager.status = "In Progress";
+                    this.eventManager.startedAt = new Date();
+                    this.eventManager.notifyListeners();
+
+                    this.eventManager.interval = setInterval(() => {
+                        let elapsedTime = Math.floor((new Date() - this.eventManager.startedAt) / 1000);
+                        this.eventManager.inProgressDuration = `${elapsedTime} seconds`;
+                    }, 1000);
+                } else {
+                    alert(`Event "${this.eventManager.name}" cannot start yet.`);
+                }
+            }
+        }
+
+        class FinishEvent {
+            constructor(eventManager) {
+                this.eventManager = eventManager;
+            }
+
+            trigger() {
+                if (this.eventManager.status === "In Progress") {
+                    this.eventManager.status = "Finished";
+                    this.eventManager.finishedAt = new Date().toLocaleTimeString();
+                    clearInterval(this.eventManager.interval);
+                    this.eventManager.notifyListeners();
+                } else {
+                    alert(`Event must be in progress before finishing.`);
+                }
+            }
+        }
+
+        class StatusEvent {
+            constructor(eventManager) {
+                this.eventManager = eventManager;
+            }
+
+            trigger() {
+                alert(`
+                    Event: ${this.eventManager.name}
+                    Status: ${this.eventManager.status}
+                    Started At: ${this.eventManager.startedAt ? this.eventManager.startedAt.toLocaleTimeString() : "-"}
+                    In Progress Duration: ${this.eventManager.inProgressDuration || "-"}
+                    Finished At: ${this.eventManager.finishedAt || "-"}
+                `);
+            }
+        }
+
+        const event1 = new EventManager("Conference", "2025-02-04T10:00:00", "2025-02-04T15:00:00");
+
+        event1.addListener(event => {
+            document.getElementById("eventStatus").textContent = event.status;
+            document.getElementById("startedAt").textContent = event.startedAt ? event.startedAt.toLocaleTimeString() : "-";
+            document.getElementById("finishedAt").textContent = event.finishedAt || "-";
+        });
+
+        const startEvent = new StartEvent(event1);
+        const finishEvent = new FinishEvent(event1);
+        const statusEvent = new StatusEvent(event1);
+    </script>
+
+</body>
+</html>
