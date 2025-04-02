@@ -1,0 +1,17 @@
+<p>about works!</p>
+
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <td>Name</td>
+            <td>Department</td>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let user of users">
+            <td>{{ user.name }}</td>
+            <td>{{ user.dept }}</td>
+        </tr>
+    </tbody>
+</table>

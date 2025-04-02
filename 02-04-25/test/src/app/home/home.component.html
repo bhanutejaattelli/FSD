@@ -1,0 +1,45 @@
+<!-- interpolation {{}} -->
+<h2>Home Component Welcomes, {{name}}</h2>
+
+userName:<input type="text" #na/>
+<button (click)="display(na)">SendName</button>
+
+<input type="text" [(ngModel)]="name"><!-- [()]  two wat modelling (Banana in the box)-->
+
+<hr/>
+<!-- <ul>
+    <li>{{hobbies[0]}}</li>
+    <li>{{hobbies[1]}}</li>
+    <li>{{hobbies[2]}}</li>
+</ul> -->
+
+<!--Angular directines comes in when we need to iterate the array-->
+
+<!--
+nhIf
+ngFor
+ngSwitch-->
+
+<!-- <ul>
+    <li *ngFor="let hobby of hobbies" >
+        <span *ngIf="hobby!='playing'">
+            {{hobby}}
+        </span>
+    </li>
+</ul>
+
+<ol>
+    <li *ngFor="let hobby of hobbies">{{hobby}}</li>
+</ol> -->
+
+<!-- @for (item of hobbies ; track item ){
+@if (item !=="playing"){
+   <li>{{item}}</li>
+}@else{
+    <li>Not playing</li>
+}  
+} -->
+
+@for (user of users ; track user ){
+    <h2>{{user.id}}</h2>
+}
