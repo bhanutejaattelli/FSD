@@ -1,116 +1,131 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Event Management</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Manager</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    input, button, select { margin: 5px; padding: 8px; }
+    .task { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
+  </style>
 </head>
 <body>
+  <h2>Task Manager</h2>
 
-    <h1>Event Management System</h1>
-    
-    <div>
-        <!-- <h2 id="eventName">Conference</h2>
-        <p><strong>Start Time:</strong> <span id="startTime">10:00 AM</span></p>
-        <p><strong>End Time:</strong> <span id="endTime">03:00 PM</span></p> -->
-        <p><strong>Status:</strong> <span id="eventStatus">Not Started</span></p>
-        <p><strong>Started At:</strong> <span id="startedAt">-</span></p>
-        <p><strong>Finished At:</strong> <span id="finishedAt">-</span></p>
-        
-        <button onclick="startEvent.trigger()">Start Event</button>
-        <button onclick="finishEvent.trigger()">Finish Event</button>
-        <button onclick="statusEvent.trigger()">Check Status</button>
-    </div>' '
+  <div>
+    <h3>Register</h3>
+    <input type="text" id="regName" placeholder="Name">
+    <input type="email" id="regEmail" placeholder="Email">
+    <input type="password" id="regPassword" placeholder="Password">
+    <button onclick="register()">Register</button>
+  </div>
 
-    <script>
-        class EventManager {
-            constructor(name, startTime, endTime) {
-                this.name = name;
-                this.startTime = new Date(startTime);
-                this.endTime = new Date(endTime);
-                this.status = "Not Started";
-                this.startedAt = null;
-                this.finishedAt = null;
-                this.inProgressDuration = null;
-                this.interval = null;
-                this.listeners = [];
-            }
+  <div>
+    <h3>Login</h3>
+    <input type="email" id="loginEmail" placeholder="Email">
+    <input type="password" id="loginPassword" placeholder="Password">
+    <button onclick="login()">Login</button>
+  </div>
 
-            addListener(callback) {
-                this.listeners.push(callback);
-            }
+  <div id="taskSection" style="display:none">
+    <h3>Create Task</h3>
+    <input type="text" id="taskTitle" placeholder="Title">
+    <input type="text" id="taskDesc" placeholder="Description">
+    <input type="date" id="taskDue">
+    <select id="taskStatus">
+      <option value="pending">Pending</option>
+      <option value="in-progress">In Progress</option>
+      <option value="completed">Completed</option>
+    </select>
+    <button onclick="createTask()">Create</button>
 
-            notifyListeners() {
-                this.listeners.forEach(callback => callback(this));
-            }
-        }
+    <h3>Your Tasks</h3>
+    <div id="tasks"></div>
+  </div>
 
-        class StartEvent {
-            constructor(eventManager) {
-                this.eventManager = eventManager;
-            }
+  <script>
+    const API = 'http://localhost:5000/api';
+    let token = '';
 
-            trigger() {
-                if (new Date() >= this.eventManager.startTime) {
-                    this.eventManager.status = "In Progress";
-                    this.eventManager.startedAt = new Date();
-                    this.eventManager.notifyListeners();
+    function register() {
+      const name = document.getElementById('regName').value;
+      const email = document.getElementById('regEmail').value;
+      const password = document.getElementById('regPassword').value;
 
-                    this.eventManager.interval = setInterval(() => {
-                        let elapsedTime = Math.floor((new Date() - this.eventManager.startedAt) / 1000);
-                        this.eventManager.inProgressDuration = `${elapsedTime} seconds`;
-                    }, 1000);
-                } else {
-                    alert(`Event "${this.eventManager.name}" cannot start yet.`);
-                }
-            }
-        }
+      fetch(`${API}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
+      })
+      .then(res => res.json())
+      .then(data => {
+        token = data.token;
+        alert('Registered successfully!');
+        document.getElementById('taskSection').style.display = 'block';
+        loadTasks();
+      });
+    }
 
-        class FinishEvent {
-            constructor(eventManager) {
-                this.eventManager = eventManager;
-            }
+    function login() {
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
 
-            trigger() {
-                if (this.eventManager.status === "In Progress") {
-                    this.eventManager.status = "Finished";
-                    this.eventManager.finishedAt = new Date().toLocaleTimeString();
-                    clearInterval(this.eventManager.interval);
-                    this.eventManager.notifyListeners();
-                } else {
-                    alert(`Event must be in progress before finishing.`);
-                }
-            }
-        }
+      fetch(`${API}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      })
+      .then(res => res.json())
+      .then(data => {
+        token = data.token;
+        alert('Logged in successfully!');
+        document.getElementById('taskSection').style.display = 'block';
+        loadTasks();
+      });
+    }
 
-        class StatusEvent {
-            constructor(eventManager) {
-                this.eventManager = eventManager;
-            }
+    function createTask() {
+      const title = document.getElementById('taskTitle').value;
+      const description = document.getElementById('taskDesc').value;
+      const dueDate = document.getElementById('taskDue').value;
+      const status = document.getElementById('taskStatus').value;
 
-            trigger() {
-                alert(`
-                    Event: ${this.eventManager.name}
-                    Status: ${this.eventManager.status}
-                    Started At: ${this.eventManager.startedAt ? this.eventManager.startedAt.toLocaleTimeString() : "-"}
-                    In Progress Duration: ${this.eventManager.inProgressDuration || "-"}
-                    Finished At: ${this.eventManager.finishedAt || "-"}
-                `);
-            }
-        }
+      fetch(`${API}/tasks`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token
+        },
+        body: JSON.stringify({ title, description, dueDate, status })
+      })
+      .then(res => res.json())
+      .then(data => {
+        alert('Task created!');
+        loadTasks();
+      });
+    }
 
-        const event1 = new EventManager("Conference", "2025-02-04T10:00:00", "2025-02-04T15:00:00");
-
-        event1.addListener(event => {
-            document.getElementById("eventStatus").textContent = event.status;
-            document.getElementById("startedAt").textContent = event.startedAt ? event.startedAt.toLocaleTimeString() : "-";
-            document.getElementById("finishedAt").textContent = event.finishedAt || "-";
+    function loadTasks() {
+      fetch(`${API}/tasks`, {
+        headers: { 'Authorization': token }
+      })
+      .then(res => res.json())
+      .then(tasks => {
+        const taskContainer = document.getElementById('tasks');
+        taskContainer.innerHTML = '';
+        tasks.forEach(task => {
+          taskContainer.innerHTML += `
+            <div class="task">
+              <strong>${task.title}</strong><br>
+              ${task.description || ''}<br>
+              Status: ${task.status}<br>
+              Due: ${task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'N/A'}
+            </div>
+          `;
         });
-
-        const startEvent = new StartEvent(event1);
-        const finishEvent = new FinishEvent(event1);
-        const statusEvent = new StatusEvent(event1);
-    </script>
-
+      });
+    }
+  </script>
 </body>
 </html>

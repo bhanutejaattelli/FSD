@@ -1,0 +1,158 @@
+// This assumes you created an Angular project using Angular CLI:
+// ng new task-manager --routing --style=css
+
+// Step 1: Create services and components:
+// ng g s services/auth
+// ng g s services/task
+// ng g c components/register
+// ng g c components/login
+// ng g c components/task-list
+// ng g c components/task-form
+
+// Step 2: auth.service.ts
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
+
+@Injectable({ providedIn: 'root' })
+export class AuthService {
+  private API = 'http://localhost:5000/api/auth';
+  constructor(private http: HttpClient, private router: Router) {}
+
+  register(data: any) {
+    return this.http.post(`${this.API}/register`, data);
+  }
+
+  login(data: any) {
+    return this.http.post(`${this.API}/login`, data);
+  }
+
+  saveToken(token: string) {
+    localStorage.setItem('token', token);
+  }
+
+  getToken(): string | null {
+    return localStorage.getItem('token');
+  }
+
+  isLoggedIn(): boolean {
+    return !!this.getToken();
+  }
+
+  logout() {
+    localStorage.removeItem('token');
+    this.router.navigate(['/login']);
+  }
+}
+
+// Step 3: task.service.ts
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { AuthService } from './auth.service';
+
+@Injectable({ providedIn: 'root' })
+export class TaskService {
+  private API = 'http://localhost:5000/api/tasks';
+  constructor(private http: HttpClient, private auth: AuthService) {}
+
+  private headers() {
+    return {
+      headers: new HttpHeaders({
+        Authorization: `${this.auth.getToken()}`
+      })
+    };
+  }
+
+  getTasks() {
+    return this.http.get(this.API, this.headers());
+  }
+
+  createTask(data: any) {
+    return this.http.post(this.API, data, this.headers());
+  }
+}
+
+// Step 4: register.component.ts
+import { Component } from '@angular/core';
+import { AuthService } from '../../services/auth.service';
+import { Router } from '@angular/router';
+
+@Component({ selector: 'app-register', templateUrl: './register.component.html' })
+export class RegisterComponent {
+  name = '';
+  email = '';
+  password = '';
+
+  constructor(private auth: AuthService, private router: Router) {}
+
+  register() {
+    this.auth.register({ name: this.name, email: this.email, password: this.password })
+      .subscribe((res: any) => {
+        this.auth.saveToken(res.token);
+        this.router.navigate(['/tasks']);
+      });
+  }
+}
+
+// Step 5: login.component.ts
+import { Component } from '@angular/core';
+import { AuthService } from '../../services/auth.service';
+import { Router } from '@angular/router';
+
+@Component({ selector: 'app-login', templateUrl: './login.component.html' })
+export class LoginComponent {
+  email = '';
+  password = '';
+
+  constructor(private auth: AuthService, private router: Router) {}
+
+  login() {
+    this.auth.login({ email: this.email, password: this.password })
+      .subscribe((res: any) => {
+        this.auth.saveToken(res.token);
+        this.router.navigate(['/tasks']);
+      });
+  }
+}
+
+// Step 6: task-list.component.ts
+import { Component, OnInit } from '@angular/core';
+import { TaskService } from '../../services/task.service';
+
+@Component({ selector: 'app-task-list', templateUrl: './task-list.component.html' })
+export class TaskListComponent implements OnInit {
+  tasks: any[] = [];
+
+  constructor(private taskService: TaskService) {}
+
+  ngOnInit() {
+    this.taskService.getTasks().subscribe((data: any) => this.tasks = data);
+  }
+}
+
+// Step 7: task-form.component.ts
+import { Component } from '@angular/core';
+import { TaskService } from '../../services/task.service';
+
+@Component({ selector: 'app-task-form', templateUrl: './task-form.component.html' })
+export class TaskFormComponent {
+  title = '';
+  description = '';
+  dueDate = '';
+  status = 'pending';
+
+  constructor(private taskService: TaskService) {}
+
+  create() {
+    this.taskService.createTask({ title: this.title, description: this.description, dueDate: this.dueDate, status: this.status })
+      .subscribe(() => alert('Task created'));
+  }
+}
+
+// Step 8: app-routing.module.ts
+const routes: Routes = [
+  { path: 'register', component: RegisterComponent },
+  { path: 'login', component: LoginComponent },
+  { path: 'tasks', component: TaskListComponent },
+  { path: '', redirectTo: 'login', pathMatch: 'full' }
+];
