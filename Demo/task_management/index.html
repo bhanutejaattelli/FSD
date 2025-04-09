@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Task Manager</title>
+  <style>
+    body { font-family: Arial; padding: 20px; max-width: 600px; margin: auto; }
+    input, textarea, select { width: 100%; margin: 5px 0; padding: 8px; }
+    button { padding: 10px 15px; margin-top: 10px; }
+    .task { border: 1px solid #ccc; padding: 10px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h2>Register</h2>
+  <input id="regName" placeholder="Name">
+  <input id="regEmail" placeholder="Email">
+  <input id="regPass" placeholder="Password" type="password">
+  <button onclick="register()">Register</button>
+
+  <h2>Login</h2>
+  <input id="logEmail" placeholder="Email">
+  <input id="logPass" placeholder="Password" type="password">
+  <button onclick="login()">Login</button>
+
+  <div id="taskSection" style="display:none;">
+    <h2>Create Task</h2>
+    <input id="title" placeholder="Title">
+    <textarea id="desc" placeholder="Description"></textarea>
+    <input id="due" type="date">
+    <select id="status">
+      <option value="pending">Pending</option>
+      <option value="in-progress">In Progress</option>
+      <option value="completed">Completed</option>
+    </select>
+    <button onclick="createTask()">Create Task</button>
+
+    <h2>Your Tasks</h2>
+    <div id="taskList"></div>
+  </div>
+
+  <script>
+    const API = 'http://localhost:5000/api';
+    let token = '';
+
+    function register() {
+      fetch(`${API}/auth/register`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          name: document.getElementById('regName').value,
+          email: document.getElementById('regEmail').value,
+          password: document.getElementById('regPass').value
+        })
+      })
+      .then(res => res.json())
+      .then(data => alert('Registered successfully!'));
+    }
+
+    function login() {
+    fetch(`${API}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            email: document.getElementById('logEmail').value,
+            password: document.getElementById('logPass').value
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.token) {
+            token = data.token; // Store token
+            document.getElementById('taskSection').style.display = 'block';
+            getTasks();
+        } else {
+            alert(data.msg || 'Login failed. Please try again.');
+        }
+    })
+    .catch(err => alert('An error occurred. Please try again.'));
+}
+
+    function createTask() {
+      const title = document.getElementById('title').value;
+      const description = document.getElementById('desc').value;
+      const dueDate = document.getElementById('due').value;
+
+      if (!title || !dueDate) {
+        alert('Title and Due Date are required.');
+        return;
+      }
+
+      fetch(`${API}/tasks`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ title, description, status: document.getElementById('status').value, dueDate })
+      })
+      .then(res => res.json())
+      .then(data => {
+        alert('Task created!');
+        getTasks();
+      })
+      .catch(err => alert('An error occurred. Please try again.'));
+    }
+
+    function getTasks() {
+    fetch(`${API}/tasks`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => {
+        if (res.status === 401) {
+            alert('Session expired. Please log in again.');
+            document.getElementById('taskSection').style.display = 'none';
+            return [];
+        }
+        return res.json();
+    })
+    .then(data => {
+        const list = document.getElementById('taskList');
+        list.innerHTML = '';
+        data.forEach(task => {
+            list.innerHTML += `<div class="task">
+                <strong>${task.title}</strong> <br/>
+                ${task.description || 'No description'} <br/>
+                Due: ${new Date(task.dueDate).toLocaleDateString()} <br/>
+                Status: ${task.status}
+            </div>`;
+        });
+    })
+    .catch(err => alert('Failed to fetch tasks. Please try again.'));
+}
+  </script>
+</body>
+</html>
